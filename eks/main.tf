@@ -139,14 +139,21 @@ resource "aws_eks_cluster" "main" {
 }
 
 # Fetch OIDC provider thumbprint for root CA
-data "external" "thumbprint" {
-  program =    ["${path.module}/oidc_thumbprint.sh", var.region]
+
+#data "external" "thumbprint" {
+#  program =    ["${path.module}/oidc_thumbprint.sh", var.region]
+#  depends_on = [aws_eks_cluster.main]
+#}
+
+data "tls_certificate" "thumbprint" {
+  url = aws_eks_cluster.main.identity.0.oidc.0.issuer
   depends_on = [aws_eks_cluster.main]
 }
 
 resource "aws_iam_openid_connect_provider" "main" {
   client_id_list  = ["sts.amazonaws.com"]
-  thumbprint_list = [data.external.thumbprint.result.thumbprint]
+  #thumbprint_list = [data.external.thumbprint.result.thumbprint]
+  thumbprint_list = [data.tls_certificate.thumbprint.certificates.0.sha1_fingerprint]
   url             = data.aws_eks_cluster.cluster.identity[0].oidc[0].issuer
 
   lifecycle {

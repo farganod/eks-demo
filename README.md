@@ -4,20 +4,12 @@ This code supports a full stack deployment EKS Cluster with the potential for mu
 
 The following resources are used to deploy this environment:
 
+## AWS Resources
+
 * [VPC Module](https://registry.terraform.io/modules/terraform-aws-modules/vpc/aws/2.44.0)
-* [Cloudwatch Log Group](https://www.terraform.io/docs/providers/aws/r/cloudwatch_log_group.html)
-* [S3 Bucket](https://www.terraform.io/docs/providers/aws/r/s3_bucket.html)
-* [S3 Bucket Policy](https://www.terraform.io/docs/providers/aws/r/s3_bucket_policy.html)
-* [Security Group](https://www.terraform.io/docs/providers/aws/r/security_group.html)
-* [Load Balancer v2](https://www.terraform.io/docs/providers/aws/r/lb.html)
-* [Load Balancer Target Group](https://www.terraform.io/docs/providers/aws/r/lb_target_group.html)
-* [Load Balancer Lisenter](https://www.terraform.io/docs/providers/aws/r/lb_listener.html)
-* [ECS Cluster](https://www.terraform.io/docs/providers/aws/r/ecs_cluster.html)
-* [ECS Task Definition](https://www.terraform.io/docs/providers/aws/r/ecs_task_definition.html)
-* [ECS Service](https://www.terraform.io/docs/providers/aws/r/ecs_service.html)
-* [Application Autoscaling](https://www.terraform.io/docs/providers/aws/r/appautoscaling_target.html)
-* [Application Autoscaling Policy](https://www.terraform.io/docs/providers/aws/r/appautoscaling_policy.html)
-* [CloudWatch Alarm](https://www.terraform.io/docs/providers/aws/r/cloudwatch_metric_alarm.html)
+
+## Kubernetes Resources (Ingress Module)
+
 
 # Usage
 
