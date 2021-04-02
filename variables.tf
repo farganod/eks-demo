@@ -6,7 +6,7 @@ variable "env_name" {
 
 variable "environment" {
   description = "the name of your environment, e.g. \"prod\""
-  default     = "prod"
+  default     = "dev"
 }
 
 variable "region" {
@@ -17,14 +17,4 @@ variable "region" {
 variable "cidr_block" {
   description = "The CIDR block for the VPC."
   default     = "10.0.0.0/16"
-}
-
-variable "kubeconfig_path" {
-  description = "Path where the config file for kubectl should be written to"
-  default     = "~/.kube"
-}
-
-variable "k8s_version" {
-  description = "kubernetes version"
-  default = ""
 }

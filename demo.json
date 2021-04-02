@@ -2,7 +2,5 @@
     "env_name" : "eks-demo",
     "environment" : "prod",
     "cidr_block" : "10.0.0.0/16",
-    "region" : "us-east-1",
-    "kubeconfig_path"  : "~/.kube",
-    "k8s_version" : ""
+    "region" : "us-east-1"
   }

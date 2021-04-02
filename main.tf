@@ -24,25 +24,24 @@ module "vpc" {
     Terraform   = "true"
     Environment = "dev"
   }
+
 }
 
-module "eks" {
-  source          = "./eks"
-  name            = var.env_name
-  environment     = var.environment
-  region          = var.region
-  k8s_version     = var.k8s_version
+module "cluster" {
+  source          = "terraform-aws-modules/eks/aws"
+  cluster_name    = "eks-demo"
+  cluster_version = "1.19"
   vpc_id          = module.vpc.vpc_id
-  private_subnets = module.vpc.private_subnets
-  public_subnets  = module.vpc.public_subnets
-  kubeconfig_path = var.kubeconfig_path
+  subnets         = module.vpc.public_subnets
+  enable_irsa     = true
+  wait_for_cluster_interpreter = ["c:/git/bin/sh.exe", "-c"]
+  wait_for_cluster_cmd         = "until curl -sk $ENDPOINT >/dev/null; do sleep 4; done"
+
+  worker_groups = [
+    {
+      instance_type = "t3.medium"
+      asg_max_size  = 3
+    }
+  ]
 }
 
-module "ingress" {
-  source       = "./ingress"
-  name         = var.env_name
-  environment  = var.environment
-  region       = var.region
-  vpc_id       = module.vpc.vpc_id
-  cluster_id   = module.eks.cluster_id
-}
