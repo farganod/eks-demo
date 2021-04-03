@@ -67,14 +67,10 @@ module "cluster" {
   }
 }
 
-resource "aws_iam_policy" "policy" {
-  name        = "eks-demo-service-policy"
-  path        = "/"
-  description = "Policy for IAM Role for EKS Service account"
+resource "aws_iam_role" "role" {
+  name = "eks-demo-service-role"
 
-  # Terraform's "jsonencode" function converts a
-  # Terraform expression result to valid JSON syntax.
-  policy = <<EOF
+  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
