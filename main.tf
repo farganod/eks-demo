@@ -1,15 +1,19 @@
+#Data resoruces to get the az in regions deploying to
 data "aws_availability_zones" "available" {
   state = "available"
 }
 
+# Data for cluster deployed to used for kube provider
 data "aws_eks_cluster" "cluster" {
   name = module.cluster.cluster_id
 }
 
+# Data for cluster auth deployed to used for kube provider
 data "aws_eks_cluster_auth" "cluster" {
   name = module.cluster.cluster_id
 }
 
+# Establishes kube proivder for confiuring the IRSA
 provider "kubernetes" {
   host                   = data.aws_eks_cluster.cluster.endpoint
   cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority.0.data)
@@ -43,6 +47,7 @@ module "vpc" {
 
 }
 
+# Module to create the eks cluster with IRSA enabled
 module "cluster" {
   source          = "terraform-aws-modules/eks/aws"
   cluster_name    = "eks-demo"
@@ -50,8 +55,6 @@ module "cluster" {
   vpc_id          = module.vpc.vpc_id
   subnets         = module.vpc.public_subnets
   enable_irsa     = true
-  #wait_for_cluster_interpreter = ["c:/git/bin/sh.exe", "-c"]
-  #wait_for_cluster_cmd         = "until curl -sk $ENDPOINT >/dev/null; do sleep 4; done"
 
   worker_groups = [
     {
@@ -64,3 +67,30 @@ module "cluster" {
   }
 }
 
+resource "aws_iam_policy" "policy" {
+  name        = "eks-demo-service-policy"
+  path        = "/"
+  description = "Policy for IAM Role for EKS Service account"
+
+  # Terraform's "jsonencode" function converts a
+  # Terraform expression result to valid JSON syntax.
+  policy = << EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Federated": "$(module.cluster.oidc_provider_arn)"
+      },
+      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Condition": {
+        "StringEquals": {
+          "$(module.cluster.cluster_oidc_issuer_url):sub": "system:serviceaccount:default:s3-writer"
+        }
+      }
+    }
+  ]
+}
+EOF
+}
