@@ -34,8 +34,8 @@ module "cluster" {
   vpc_id          = module.vpc.vpc_id
   subnets         = module.vpc.public_subnets
   enable_irsa     = true
-  wait_for_cluster_interpreter = ["c:/git/bin/sh.exe", "-c"]
-  wait_for_cluster_cmd         = "until curl -sk $ENDPOINT >/dev/null; do sleep 4; done"
+  #wait_for_cluster_interpreter = ["c:/git/bin/sh.exe", "-c"]
+  #wait_for_cluster_cmd         = "until curl -sk $ENDPOINT >/dev/null; do sleep 4; done"
 
   worker_groups = [
     {
