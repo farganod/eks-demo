@@ -21,5 +21,5 @@ variable "cidr_block" {
 
 variable "sa_name" {
   description = "Service Account Name"
-  default     = "s3_writer"
+  default     = "s3-echoer"
 }
