@@ -82,7 +82,7 @@ resource "aws_iam_role" "role" {
       "Action": "sts:AssumeRoleWithWebIdentity",
       "Condition": {
         "StringEquals": {
-          "${module.cluster.cluster_oidc_issuer_url}:sub": "system:serviceaccount:default:s3-writer"
+          "${module.cluster.cluster_oidc_issuer_url}:sub": "system:serviceaccount:default:${var.sa_name}"
         }
       }
     }
