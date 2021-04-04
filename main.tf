@@ -77,12 +77,12 @@ resource "aws_iam_role" "role" {
     {
       "Effect": "Allow",
       "Principal": {
-        "Federated": "$(module.cluster.oidc_provider_arn)"
+        "Federated": "${module.cluster.oidc_provider_arn}"
       },
       "Action": "sts:AssumeRoleWithWebIdentity",
       "Condition": {
         "StringEquals": {
-          "$(module.cluster.cluster_oidc_issuer_url):sub": "system:serviceaccount:default:s3-writer"
+          "${module.cluster.cluster_oidc_issuer_url}:sub": "system:serviceaccount:default:s3-writer"
         }
       }
     }
