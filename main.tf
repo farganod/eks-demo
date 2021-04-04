@@ -101,5 +101,5 @@ resource "aws_iam_policy_attachment" "role-attach" {
 }
 
 resource "aws_s3_bucket" "bucket" {
-  bucket = var.env_name
+  bucket = "${var.env_name}-test123"
 }
