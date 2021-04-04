@@ -50,7 +50,7 @@ module "vpc" {
 # Module to create the eks cluster with IRSA enabled
 module "cluster" {
   source          = "terraform-aws-modules/eks/aws"
-  cluster_name    = "eks-demo"
+  cluster_name    = var.env_name
   cluster_version = "1.19"
   vpc_id          = module.vpc.vpc_id
   subnets         = module.vpc.public_subnets
@@ -98,4 +98,8 @@ resource "aws_iam_policy_attachment" "role-attach" {
   name       = "role-attachment"
   roles      = [aws_iam_role.role.name]
   policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+}
+
+resource "aws_s3_bucket" "bucket" {
+  bucket = var.env_name
 }
