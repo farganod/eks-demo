@@ -89,6 +89,9 @@ resource "aws_iam_role" "role" {
   ]
 }
 EOF
+  depends_on = [
+    module.cluster,
+  ]
 }
 
 resource "aws_iam_policy_attachment" "role-attach" {
