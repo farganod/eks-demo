@@ -19,7 +19,6 @@ provider "kubernetes" {
   cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority.0.data)
   token                  = data.aws_eks_cluster_auth.cluster.token
   load_config_file       = false
-  version                = "~> 1.12"
 }
 
 # Module to deploy out full network infrastructure
@@ -82,7 +81,7 @@ resource "aws_iam_role" "role" {
       "Action": "sts:AssumeRoleWithWebIdentity",
       "Condition": {
         "StringEquals": {
-          "${module.cluster.cluster_oidc_issuer_url}:sub": "system:serviceaccount:default:${var.sa_name}"
+          "${trimmpreefix(module.cluster.cluster_oidc_issuer_url,"https://")}:sub": "system:serviceaccount:default:${var.sa_name}"
         }
       }
     }
