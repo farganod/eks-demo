@@ -13,7 +13,7 @@ data "aws_eks_cluster_auth" "cluster" {
   name = module.cluster.cluster_id
 }
 
-# Establishes kube proivder for confiuring the IRSA
+# Establishes kube proivder for configuring the IRSA
 provider "kubernetes" {
   host                   = data.aws_eks_cluster.cluster.endpoint
   cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority.0.data)
@@ -66,6 +66,7 @@ module "cluster" {
   }
 }
 
+# Creates the iam role with assume role policy for service account
 resource "aws_iam_role" "role" {
   name = "eks-demo-service-role"
 
@@ -81,7 +82,7 @@ resource "aws_iam_role" "role" {
       "Action": "sts:AssumeRoleWithWebIdentity",
       "Condition": {
         "StringEquals": {
-          "${trimmpreefix(module.cluster.cluster_oidc_issuer_url,"https://")}:sub": "system:serviceaccount:default:${var.sa_name}"
+          "${trimprefix(module.cluster.cluster_oidc_issuer_url,"https://")}:sub": "system:serviceaccount:default:${var.sa_name}"
         }
       }
     }
@@ -93,12 +94,14 @@ EOF
   ]
 }
 
+# Attaches S3 Full access to role
 resource "aws_iam_policy_attachment" "role-attach" {
   name       = "role-attachment"
   roles      = [aws_iam_role.role.name]
   policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
 }
 
+# Creates Bucket for used in demo
 resource "aws_s3_bucket" "bucket" {
   bucket = "${var.env_name}-test123"
 }

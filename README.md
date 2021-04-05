@@ -1,15 +1,18 @@
-# Full Stack EKS Deployment On Fargate
+# Demo EKS Stack Deployment EC2 with IRSA
 
-This code supports a full stack deployment EKS Cluster with the potential for multiple containers running on a single task definition. Leveraging `terraform` as the IaC this can be run locally with correct credentials or through a pipeline.
+This code supports a the deployment of EKS Cluster with the potential for multi-tenancy. Leveraging `terraform` as the IaC this can be run locally with correct credentials or through a pipeline. This stack supports IAM roles for Service Account (IRSA) for the kubernetes app deployment I forked from the demo repo [s3-echoer](https://github.com/mhausenblas/s3-echoer) and modified the yaml template to support the region I was working in. My forked repo can is [farganod/s3-echoer](https://github.com/farganod/s3-echoer)
+
+The blog post this stack is used to deploy is [fine grained roles for eks service accounts](https://aws.amazon.com/blogs/opensource/introducing-fine-grained-iam-roles-service-accounts/)
 
 The following resources are used to deploy this environment:
 
-## AWS Resources
+## Resources
 
-* [VPC Module](https://registry.terraform.io/modules/terraform-aws-modules/vpc/aws/2.44.0)
-
-## Kubernetes Resources (Ingress Module)
-
+* [VPC Module](https://registry.terraform.io/modules/terraform-aws-modules/vpc/aws/latest)
+* [EKS Cluster Module](https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest)
+* [IAM Role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role)
+* [IAM Policy Attachment](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy_attachment)
+* [S3 Bucket](https://www.terraform.io/docs/providers/aws/r/s3_bucket.html)
 
 # Usage
 
@@ -37,75 +40,58 @@ Once working environment has been established you can now execute the build of t
 
 `terraform apply --var-file=demo.json`
 
-*The expected output of the command:*
+# Code Build YAMLs
+
+I manually deployed the AWS Code Build environemnts and placed the `buildspec.yaml` commands directly in each of the environments. Below are contents of each for posterity
+
+## eks-demo (terraform build)
 
 ```
-terraform apply --var-file=dev.json
-data.aws_secretsmanager_secret_version.secrets: Refreshing state...
-module.vpc.data.aws_iam_policy_document.vpc_flow_log_cloudwatch[0]: Refreshing state...
-module.vpc.data.aws_iam_policy_document.flow_log_cloudwatch_assume_role[0]: Refreshing state...
-data.aws_availability_zones.available: Refreshing state...
+version: 0.2
 
-An execution plan has been generated and is shown below.
-Resource actions are indicated with the following symbols:
-  + create
+phases:
 
-Terraform will perform the following actions:
+  install:
+    commands:
+      - "apt install unzip -y"
+      - "wget https://releases.hashicorp.com/terraform/0.14.9/terraform_0.14.9_linux_amd64.zip"
+      - "unzip terraform_0.14.9_linux_amd64.zip"
+      - "mv terraform /usr/local/bin/"
+      - "terraform -version"
+  pre_build:
+    commands:
+      - terraform init
 
-  # aws_appautoscaling_policy.scale_down_policy will be created
-  + resource "aws_appautoscaling_policy" "scale_down_policy" {
-      + arn                = (known after apply)
-      + id                 = (known after apply)
-      + name               = "scale-down"
-      + policy_type        = "StepScaling"
-      + resource_id        = "service/VirtualAdviser-Dev/VirtualAdviser-Dev-service"
-      + scalable_dimension = "ecs:service:DesiredCount"
-      + service_namespace  = "ecs"
+  build:
+    commands:
+      - terraform apply -var-file=demo.json -auto-approve
 
-      + step_scaling_policy_configuration {
-          + adjustment_type         = "ChangeInCapacity"
-          + cooldown                = 60
-          + metric_aggregation_type = "Average"
-
-          + step_adjustment {
-              + metric_interval_upper_bound = "0"
-              + scaling_adjustment          = -1
-            }
-        }
-    }
-
-...
-# module.vpc.aws_vpc.this[0] will be created
-+ resource "aws_vpc" "this" {
-    + arn                              = (known after apply)
-    + assign_generated_ipv6_cidr_block = false
-    + cidr_block                       = "10.0.0.0/16"
-    + default_network_acl_id           = (known after apply)
-    + default_route_table_id           = (known after apply)
-    + default_security_group_id        = (known after apply)
-    + dhcp_options_id                  = (known after apply)
-    + enable_classiclink               = (known after apply)
-    + enable_classiclink_dns_support   = (known after apply)
-    + enable_dns_hostnames             = false
-    + enable_dns_support               = true
-    + id                               = (known after apply)
-    + instance_tenancy                 = "default"
-    + ipv6_association_id              = (known after apply)
-    + ipv6_cidr_block                  = (known after apply)
-    + main_route_table_id              = (known after apply)
-    + owner_id                         = (known after apply)
-    + tags                             = {
-        + "Environment" = "dev"
-        + "Name"        = "VirtualAdviser-Dev"
-        + "Terraform"   = "true"
-      }
-  }
-
-Plan: 42 to add, 0 to change, 0 to destroy.
-
-Do you want to perform these actions?
-Terraform will perform the actions described above.
-Only 'yes' will be accepted to approve.
+  post_build:
+    commands:
+      - echo terraform apply completed on `date`
 ```
-Enter `yes` to approve the build
+## eks-demo-deployment (kubernetes job deployment)
 
+```
+version: 0.2
+phases:
+  pre_build:
+    commands:
+      - aws eks --region us-east-1 update-kubeconfig --name eks-demo
+      - kubectl get nodes
+      - aws s3api list-objects --bucket eks-demo-test123
+  build:
+    commands:
+      - kubectl create sa s3-echoer
+      - kubectl annotate sa s3-echoer eks.amazonaws.com/role-arn=arn:aws:iam::175039216299:role/eks-demo-service-role
+      - sed -e "s/TARGET_BUCKET/eks-demo-test123/g" s3-echoer-job.yaml.template > s3-echoer-job.yaml
+      - kubectl apply -f s3-echoer-job.yaml
+  post_build:
+    commands:
+      - sleep 10
+      - kubectl logs job/s3-echoer
+      - aws s3api list-objects --bucket eks-demo-test123
+      - aws s3 rm s3://eks-demo-test123 --recursive
+      - kubectl delete job/s3-echoer
+      - kubectl delete sa s3-echoer
+```
