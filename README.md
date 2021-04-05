@@ -1,6 +1,6 @@
 # Demo EKS Stack Deployment EC2 with IRSA
 
-This code supports a the deployment of EKS Cluster with the potential for multi-tenancy. Leveraging `terraform` as the IaC this can be run locally with correct credentials or through a pipeline. This stack supports IAM roles for Service Account (IRSA) for the kubernetes app deployment I forked from the demo repo [s3-echoer](https://github.com/mhausenblas/s3-echoer) and modified the yaml template to support the region I was working in. My forked repo can is [farganod/s3-echoer](https://github.com/farganod/s3-echoer)
+This code supports a the deployment of EKS Cluster with the potential for multi-tenancy. Leveraging `terraform` as the IaC this can be run locally with correct credentials or through a pipeline. This stack supports IAM roles for Service Account (IRSA) for fine grained pod permissions. For the kubernetes app deployment I forked from the demo repo [s3-echoer](https://github.com/mhausenblas/s3-echoer) and modified the yaml template to support the region I was working in. My forked repo can is [farganod/s3-echoer](https://github.com/farganod/s3-echoer)
 
 The blog post this stack is used to deploy is [fine grained roles for eks service accounts](https://aws.amazon.com/blogs/opensource/introducing-fine-grained-iam-roles-service-accounts/)
 
